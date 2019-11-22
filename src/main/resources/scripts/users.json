@@ -1,0 +1,10 @@
+{"index":{"_index":"test-users","_id":1}}
+{"id": 1, "name": "Duane","location": {"lat": "32.715736","lon": "-117.161087"}}
+{"index":{"_index":"test-users","_id":2}}
+{"id": 2, "name": "Matt","location": {"lat": "19.42847","lon": "-99.12766"}}
+{"index":{"_index":"test-users","_id":3}}
+{"id": 3, "name": "Ricky","location": {"lat": "30.266666","lon": "-97.733330"}}
+{"index":{"_index":"test-users","_id":4}}
+{"id": 4, "name": "Carter","location": {"lat": "30.366666","lon": "-97.733330"}}
+{"index":{"_index":"test-users","_id":5}}
+{"id": 5, "name": "Mitch","location": {"lat": "30.366666","lon": "-97.833330"}}
