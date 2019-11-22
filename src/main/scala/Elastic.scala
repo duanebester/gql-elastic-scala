@@ -3,27 +3,26 @@ import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.http.JavaClient
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import models.outputs._
-import models.inputs._
+import models.common._
+import models.responses._
+import models.variables._
 import com.sksamuel.elastic4s.requests.searches.queries.geo.Corners
 import com.sksamuel.elastic4s.requests.searches.queries.geo.GeoBoundingBoxQuery
 import com.sksamuel.elastic4s.requests.searches.SearchRequest
 import com.sksamuel.elastic4s.requests.searches.queries.Query
-import scala.collection.mutable
 import com.sksamuel.elastic4s.requests.searches.queries.BoolQuery
+import scala.collection.mutable
 import com.sksamuel.elastic4s.sprayjson._
 
 trait ElasticHelpers {
   final val USER_INDEX = "test-users"
+  final val COFFEE_SHOPS_INDEX = "test-coffee-shops"
 
   val elasticProps: ElasticProperties
   val elasticClient: ElasticClient
 
-  def searchUsers(filter: Filter): Future[Users]
-
-  def getUser(id: Int): Future[User]
-
-  def getUsers(ids: Seq[Int]): Future[Seq[User]]
+  def searchUsers(filter: Filter): Future[SearchResponse[User]]
+  def searchCoffeeShops(filter: Filter): Future[CoffeeShopsResponse]
 
   def geoQuery(geom: BBox): GeoBoundingBoxQuery =
     geoBoxQuery("location").corners(
@@ -35,7 +34,7 @@ trait ElasticHelpers {
       )
     )
 
-  def buildUserQuery(filter: Filter): BoolQuery
+  def buildQuery(filter: Filter): BoolQuery
 }
 
 class Elastic(props: ElasticProperties) extends ElasticHelpers {
@@ -46,35 +45,30 @@ class Elastic(props: ElasticProperties) extends ElasticHelpers {
 
   def searchUsers(filter: Filter) =
     elasticClient.execute {
-      search(USER_INDEX).bool(buildUserQuery(filter))
-    }.map(resp => Users(resp.result.to[User], resp.result.totalHits))
+      search(USER_INDEX).bool(buildQuery(filter))
+    }.map(resp => UsersResponse(resp.result.to[User], resp.result.totalHits))
 
-  def getUser(id: Int) =
+  def searchCoffeeShops(filter: Filter) =
     elasticClient.execute {
-      search(USER_INDEX).query(idsQuery(id))
-    }.map(resp => resp.result.to[User].head)
+      search(COFFEE_SHOPS_INDEX).bool(buildQuery(filter))
+    }.map(resp => CoffeeShopsResponse(resp.result.to[CoffeeShop], resp.result.totalHits))
 
-  def getUsers(ids: Seq[Int]) =
-    elasticClient.execute {
-      search(USER_INDEX).query(idsQuery(ids))
-    }.map(resp => resp.result.to[User])
-
-  def buildUserQuery(queryFilter: Filter): BoolQuery = {
-    var userMusts = mutable.ListBuffer[Query]()
-    var userFilters = mutable.ListBuffer[Query]()
+  def buildQuery(queryFilter: Filter): BoolQuery = {
+    var qMusts = mutable.ListBuffer[Query]()
+    var qFilters = mutable.ListBuffer[Query]()
 
     if (queryFilter.name.isDefined) {
       val name = queryFilter.name.get.toLowerCase()
-      userMusts += prefixQuery("name", name);
+      qMusts += prefixQuery("name", name);
     } else {
-      userMusts += matchAllQuery()
+      qMusts += matchAllQuery()
     }
 
     if (queryFilter.bbox.isDefined) {
       val geom = queryFilter.bbox.get
-      userFilters += geoQuery(geom)
+      qFilters += geoQuery(geom)
     }
 
-    return must(userMusts.toSeq).filter(userFilters)
+    return must(qMusts.toSeq).filter(qFilters)
   }
 }

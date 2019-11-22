@@ -1,4 +1,4 @@
-package models.inputs
+package models.variables
 
 import spray.json.DefaultJsonProtocol
 

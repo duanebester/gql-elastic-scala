@@ -46,10 +46,9 @@ object GraphQLServer {
       .execute(
         GraphQLSchema.SchemaDefinition,
         query,
-        MyContext(elastic),
+        MyContext(elastic, None),
         variables = vars,
-        operationName = operation,
-        deferredResolver = GraphQLSchema.Resolver
+        operationName = operation
       )
       .map(OK -> _)
       .recover {

@@ -1,0 +1,10 @@
+{"index":{"_index":"test-coffee-shops","_id":1}}
+{"id": 1, "name": "Starbucks", "location": {"lat": "32.715736","lon": "-117.161087"}}
+{"index":{"_index":"test-coffee-shops","_id":2}}
+{"id": 2, "name": "Bennu", "location": {"lat": "21.42847","lon": "-98.12766"}}
+{"index":{"_index":"test-coffee-shops","_id":3}}
+{"id": 3, "name": "Medici", "location": {"lat": "30.366666","lon": "-97.743330"}}
+{"index":{"_index":"test-coffee-shops","_id":4}}
+{"id": 4, "name": "Starbucks", "location": {"lat": "30.266666","lon": "-97.7343330"}}
+{"index":{"_index":"test-coffee-shops","_id":5}}
+{"id": 5, "name": "Bean", "location": {"lat": "30.466666","lon": "-97.823330"}}

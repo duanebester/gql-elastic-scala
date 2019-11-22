@@ -1,55 +1,71 @@
 import sangria.schema._
 import sangria.macros.derive._
 import sangria.marshalling.sprayJson._
-import sangria.execution.deferred._
+import models.responses._
+import models.variables._
 import models.common._
-import models.outputs._
-import models.inputs._
 
-case class MyContext(elastic: Elastic)
+case class MyContext(elastic: Elastic, bbox: Option[BBox] = None)
 
 object GraphQLSchema {
 
-  // Outputs
-  implicit val LocationType = deriveObjectType[Unit, Location]()
+  // Responses
+  implicit val LocationOutputType = deriveObjectType[Unit, Location]()
   implicit val UserType = deriveObjectType[Unit, User]()
-  val UsersType = deriveObjectType[Unit, Users]()
+  implicit val CoffeeShopType = deriveObjectType[Unit, CoffeeShop]()
+  val UsersResponseType = deriveObjectType[Unit, UsersResponse]()
+  val CoffeeShopsResponseType = deriveObjectType[Unit, CoffeeShopsResponse]()
 
-  // Inputs
-  implicit val FilterLocationType = deriveInputObjectType[Location](
-    InputObjectTypeName("FilterLocation"),
-    InputObjectTypeDescription("A location filter")
+  // Variables
+  implicit val LocationInputType = deriveInputObjectType[Location](
+    InputObjectTypeName("LocationVariable") // Give name to resolve name conflict
   )
-  implicit val FilterBBoxType = deriveInputObjectType[BBox](
-    InputObjectTypeName("FilterBBox"),
-    InputObjectTypeDescription("A bbox filter containing a topLeft, and bottomRight location filters")
-  )
-  val FilterType = deriveInputObjectType[Filter](
-    InputObjectTypeName("Filter"),
-    InputObjectTypeDescription("A filter object containing an optional BBox filter and an optional name filter")
-  )
+  implicit val BBoxType = deriveInputObjectType[BBox]()
 
-  // Input Arguments
-  val Id = Argument("id", IntType)
-  val Ids = Argument("ids", ListInputType(IntType))
-  val filter = Argument("filter", FilterType)
+  // Arguments
+  val bboxArg = Argument("bbox", OptionInputType(BBoxType))
+  val nameArg = Argument("name", OptionInputType(StringType))
 
-  val usersFetcher = Fetcher(
-    (ctx: MyContext, ids: Seq[Int]) => ctx.elastic.getUsers(ids)
-  )(HasId(_.id))
+  val SearchType = ObjectType(
+    "Search",
+    fields[MyContext, Unit](
+      Field(
+        "users",
+        UsersResponseType,
+        arguments = nameArg :: Nil,
+        resolve = (c) => {
+          val name = c arg nameArg
+          val filter = Filter(name, c.ctx.bbox)
+          c.ctx.elastic.searchUsers(filter)
+        }
+      ),
+      Field(
+        "coffeeShops",
+        CoffeeShopsResponseType,
+        arguments = nameArg :: Nil,
+        resolve = (c) => {
+          val name = c arg nameArg
+          val filter = Filter(name, c.ctx.bbox)
+          c.ctx.elastic.searchCoffeeShops(filter)
+        }
+      )
+    )
+  )
 
   val QueryType = ObjectType(
     "Query",
     fields[MyContext, Unit](
       Field(
-        "searchUsers",
-        UsersType,
-        arguments = filter :: Nil,
-        resolve = c => c.ctx.elastic.searchUsers(c.arg(filter))
+        "search",
+        SearchType,
+        arguments = bboxArg :: Nil,
+        resolve = c => {
+          val bbox = c arg bboxArg
+          UpdateCtx(())(_ => c.ctx.copy(bbox = bbox))
+        }
       )
     )
   )
 
-  val Resolver = DeferredResolver.fetchers(usersFetcher)
   val SchemaDefinition = Schema(QueryType)
 }
