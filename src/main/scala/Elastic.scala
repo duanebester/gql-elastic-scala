@@ -1,17 +1,17 @@
 import com.sksamuel.elastic4s.{ ElasticClient, ElasticProperties }
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.http.JavaClient
+import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import models.common._
 import models.responses._
 import models.variables._
+import com.sksamuel.elastic4s.requests.searches.SearchRequest
 import com.sksamuel.elastic4s.requests.searches.queries.geo.Corners
 import com.sksamuel.elastic4s.requests.searches.queries.geo.GeoBoundingBoxQuery
-import com.sksamuel.elastic4s.requests.searches.SearchRequest
 import com.sksamuel.elastic4s.requests.searches.queries.Query
 import com.sksamuel.elastic4s.requests.searches.queries.BoolQuery
-import scala.collection.mutable
 import com.sksamuel.elastic4s.sprayjson._
 
 trait ElasticHelpers {

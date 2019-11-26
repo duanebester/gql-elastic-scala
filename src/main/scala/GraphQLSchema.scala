@@ -56,7 +56,7 @@ object GraphQLSchema {
     "Query",
     fields[MyContext, Unit](
       Field(
-        "search",
+        "geoSearch",
         SearchType,
         arguments = bboxArg :: Nil,
         resolve = c => {
